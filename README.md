@@ -2,7 +2,7 @@
 
 ### Installation and running instructions
 
-1. Clone the repository and its submodules `git clone --recurse-submodules -j8 https://git.takelab.fer.hr/mtutek/wikiproc.git`
+1. Clone the repository and its submodules `git clone --recurse-submodules -j8 git@github.com:mttk/wiki_preproc.git`
 2. Install the requirements `pip install -r requirements.txt`
 3. Download he spacy model for the language you want `python -m spacy download en`
 4. Download and store the wikipedia dump (from https://dumps.wikimedia.org/enwiki/ for English dumps) 
