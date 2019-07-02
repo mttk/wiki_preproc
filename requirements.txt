@@ -1,0 +1,6 @@
+# Progress bars
+tqdm
+# Sentence tokenization
+spacy>=2.0.0
+# String cleaning
+ftfy
