@@ -5,6 +5,7 @@ import spacy
 import argparse
 
 from tqdm import tqdm
+from nltk.tokenize import sent_tokenize, word_tokenize
 
 """
 Step 1. Download an english dump of Wikipedia from: https://dumps.wikimedia.org/enwiki/
@@ -21,7 +22,8 @@ def make_parser():
   parser = argparse.ArgumentParser(description='Wikipedia preprocessing toolkit')
   parser.add_argument('--input', type=str, help='Wikipedia corpus preprocesed with wikiextractor', required=True)
   parser.add_argument('--data_out', type=str, help='File to store tokenized data in', required=True)
-  parser.add_argument('--header_out', type=str, help='Output file with document headers', default="")  
+  parser.add_argument('--header_out', type=str, help='Output file with document headers', default="")
+  parser.add_argument('--tokenizer', type=str, help='The tokenizer to use', default="nltk")
   return parser
 
 def load_wikiextractor_format(path_to_file):
@@ -53,7 +55,7 @@ def load_wikiextractor_format(path_to_file):
         cur_doc_lines.append(line)
 
 def spacy_for_sentence_splitting(language='en'):
-  nlp = spacy.load(language, disable=['ner', 'tagger', 'parser'])
+  nlp = spacy.load(language, disable=['ner', 'parser']) # Don't disable tagger
   nlp.add_pipe(nlp.create_pipe('sentencizer'))
   return nlp
 
@@ -62,6 +64,14 @@ def sentencize_article(article_lines, nlp):
   for paragraph in nlp.pipe(article_lines):
     for sent in paragraph.sents:
       sentences.append(str(sent))
+  return sentences
+
+def sentencize_article_nltk(article_lines):
+  sentences = []
+  for paragraph in article_lines:
+    for sentence in sent_tokenize(paragraph):
+      sentences.append(' '.join(word_tokenize(sentence)))
+      print(sentences[-1])
   return sentences
 
 def apply_sentence_hooks(sentences, hooks):
@@ -79,7 +89,8 @@ def clean_html(raw_html):
 
 def main():
   args = make_parser().parse_args()
-  spacy = spacy_for_sentence_splitting()
+  if args.tokenizer == 'spacy':
+    spacy = spacy_for_sentence_splitting()
 
   sentence_level_hooks = [ftfy.fix_text, clean_html]
 
@@ -89,7 +100,10 @@ def main():
       header_out.write(header_string + "\n")
 
       # Apply ftfy, then sentencize
-      sentencized_doc = sentencize_article(doc_lines, spacy)
+      if args.tokenizer == 'spacy':
+        sentencized_doc = sentencize_article(doc_lines, spacy)
+      elif args.tokenizer == 'nltk':
+        sentencized_doc = sentencize_article_nltk(doc_lines)
 
       if sentence_level_hooks:
         sentencized_doc = apply_sentence_hooks(sentencized_doc, sentence_level_hooks)
